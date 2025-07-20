@@ -1,4 +1,4 @@
-name: Build Container
+name: Build and Push TP-Link Exporter Plus
 
 on:
   push:
@@ -8,11 +8,52 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Build container image
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.19'
+        
+    - name: Build application
+      run: go build -o tplinkexporter-plus .
+        
+    - name: Log in to Forgejo Container Registry
       run: |
-        docker build -t ${{ gitea.repository }}:${{ gitea.sha }} .
-        docker build -t ${{ gitea.repository }}:latest .
+        echo "${{ secrets.FORGEJO_TOKEN }}" | docker login git.scootz.net -u "${{ gitea.actor }}" --password-stdin
+    
+    - name: Set image tag based on branch
+      id: tag
+      run: |
+        if [[ "${{ gitea.ref_name }}" == "main" || "${{ gitea.ref_name }}" == "master" ]]; then
+          echo "tag=latest" >> $GITHUB_OUTPUT
+        else
+          # Convert branch name to lowercase and replace special characters
+          BRANCH_TAG=$(echo "${{ gitea.ref_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g')
+          echo "tag=${BRANCH_TAG}" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Build and push Docker image
+      run: |
+        IMAGE_TAG="git.scootz.net/${{ gitea.repository_owner }}/tplinkexporter-plus"
+        
+        # Build with repository linking labels
+        docker build --no-cache \
+          --label "org.opencontainers.image.source=https://git.scootz.net/${{ gitea.repository }}" \
+          --label "org.opencontainers.image.url=https://git.scootz.net/${{ gitea.repository }}" \
+          --label "org.opencontainers.image.documentation=https://git.scootz.net/${{ gitea.repository }}" \
+          --label "org.opencontainers.image.title=TP-Link Exporter Plus" \
+          --label "org.opencontainers.image.description=Enhanced Prometheus exporter for TP-Link EasySmart switches" \
+          --label "org.opencontainers.image.vendor=${{ gitea.repository_owner }}" \
+          --label "org.opencontainers.image.version=${{ steps.tag.outputs.tag }}" \
+          --label "org.opencontainers.image.revision=${{ gitea.sha }}" \
+          --label "org.opencontainers.image.created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+          -t ${IMAGE_TAG}:${{ steps.tag.outputs.tag }} \
+          -t ${IMAGE_TAG}:${{ gitea.sha }} \
+          .
+          
+        docker push ${IMAGE_TAG}:${{ steps.tag.outputs.tag }}
+        docker push ${IMAGE_TAG}:${{ gitea.sha }}
