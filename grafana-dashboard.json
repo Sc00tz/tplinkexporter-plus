@@ -82,7 +82,7 @@
                 "expr": "tplinkexporter_portstats_state{host=\"$host\"}",
                 "interval": "",
                 "intervalFactor": 1,
-                "legendFormat": "port {{portnum}}",
+                "legendFormat": "Port {{portnum}}",
                 "refId": "A"
             }],
             "timeFrom": null,
@@ -124,6 +124,42 @@
                             "to": "",
                             "type": 1,
                             "value": "4"
+                        },
+                        {
+                            "from": "",
+                            "id": 3,
+                            "operator": "",
+                            "text": "10MF",
+                            "to": "",
+                            "type": 1,
+                            "value": "3"
+                        },
+                        {
+                            "from": "",
+                            "id": 4,
+                            "operator": "",
+                            "text": "10MH",
+                            "to": "",
+                            "type": 1,
+                            "value": "2"
+                        },
+                        {
+                            "from": "",
+                            "id": 5,
+                            "operator": "",
+                            "text": "Auto",
+                            "to": "",
+                            "type": 1,
+                            "value": "1"
+                        },
+                        {
+                            "from": "",
+                            "id": 6,
+                            "operator": "",
+                            "text": "Link Down",
+                            "to": "",
+                            "type": 1,
+                            "value": "0"
                         }
                     ],
                     "thresholds": {
@@ -166,13 +202,83 @@
                 "expr": "tplinkexporter_portstats_linkstatus{host=\"$host\"}",
                 "interval": "",
                 "intervalFactor": 1,
-                "legendFormat": "port {{portnum}}",
+                "legendFormat": "Port {{portnum}}",
                 "refId": "A"
             }],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Port Status",
+            "title": "Port Link Status",
             "transformations": [],
+            "type": "stat"
+        },
+        {
+            "datasource": null,
+            "fieldConfig": {
+                "defaults": {
+                    "custom": {},
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 10
+            },
+            "id": 8,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "table",
+                    "placement": "right"
+                },
+                "tooltip": {
+                    "mode": "single"
+                }
+            },
+            "targets": [{
+                "expr": "tplinkexporter_portconfig_info{host=\"$host\"}",
+                "interval": "",
+                "legendFormat": "Port {{portnum}} - {{speed_actual}} ({{state}})",
+                "refId": "A"
+            }],
+            "title": "Port Configuration Overview",
+            "type": "stat"
+        },
+        {
+            "datasource": null,
+            "fieldConfig": {
+                "defaults": {
+                    "custom": {},
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 6,
+                "w": 24,
+                "x": 0,
+                "y": 18
+            },
+            "id": 9,
+            "options": {
+                "legend": {
+                    "calcs": ["last"],
+                    "displayMode": "table",
+                    "placement": "right"
+                },
+                "tooltip": {
+                    "mode": "single"
+                }
+            },
+            "targets": [{
+                "expr": "tplinkexporter_system_info{host=\"$host\"}",
+                "interval": "",
+                "legendFormat": "{{device_description}} - FW: {{firmware_version}} - HW: {{hardware_version}}",
+                "refId": "A"
+            }],
+            "title": "System Information",
             "type": "stat"
         },
         {
@@ -181,7 +287,7 @@
             "dashLength": 10,
             "dashes": false,
             "datasource": null,
-            "description": "6 = 1000MF\n5 = 100MF\n4 = 100MH",
+            "description": "6 = 1000MF\n5 = 100MF\n4 = 100MH\n3 = 10MF\n2 = 10MH\n1 = Auto\n0 = Link Down",
             "fieldConfig": {
                 "defaults": {
                     "custom": {}
@@ -194,7 +300,7 @@
                 "h": 9,
                 "w": 24,
                 "x": 0,
-                "y": 10
+                "y": 24
             },
             "hiddenSeries": false,
             "id": 2,
@@ -227,14 +333,14 @@
                 "instant": false,
                 "interval": "",
                 "intervalFactor": 1,
-                "legendFormat": "port {{portnum}}",
+                "legendFormat": "Port {{portnum}}",
                 "refId": "A"
             }],
             "thresholds": [],
             "timeFrom": null,
             "timeRegions": [],
             "timeShift": null,
-            "title": "Port Link Status",
+            "title": "Port Link Status Over Time",
             "tooltip": {
                 "shared": true,
                 "sort": 0,
@@ -290,7 +396,7 @@
                 "h": 9,
                 "w": 24,
                 "x": 0,
-                "y": 19
+                "y": 33
             },
             "hiddenSeries": false,
             "id": 3,
@@ -339,13 +445,13 @@
                     "instant": false,
                     "interval": "",
                     "intervalFactor": 1,
-                    "legendFormat": "RX port {{portnum}}",
+                    "legendFormat": "RX Port {{portnum}}",
                     "refId": "A"
                 },
                 {
                     "expr": "rate(tplinkexporter_portstats_txgoodpkt{host=\"$host\"}[10s])",
                     "interval": "",
-                    "legendFormat": "TX port {{portnum}}",
+                    "legendFormat": "TX Port {{portnum}}",
                     "refId": "B"
                 }
             ],
@@ -353,7 +459,7 @@
             "timeFrom": null,
             "timeRegions": [],
             "timeShift": null,
-            "title": "good pkt counts",
+            "title": "Good Packet Rates (packets/sec)",
             "tooltip": {
                 "shared": true,
                 "sort": 0,
@@ -409,7 +515,7 @@
                 "h": 9,
                 "w": 24,
                 "x": 0,
-                "y": 28
+                "y": 42
             },
             "hiddenSeries": false,
             "id": 4,
@@ -457,13 +563,13 @@
                     "instant": false,
                     "interval": "",
                     "intervalFactor": 1,
-                    "legendFormat": "RX port {{portnum}}",
+                    "legendFormat": "RX Port {{portnum}}",
                     "refId": "A"
                 },
                 {
                     "expr": "rate(tplinkexporter_portstats_txbadpkt{host=\"$host\"}[10s])",
                     "interval": "",
-                    "legendFormat": "TX port {{portnum}}",
+                    "legendFormat": "TX Port {{portnum}}",
                     "refId": "B"
                 }
             ],
@@ -471,7 +577,7 @@
             "timeFrom": null,
             "timeRegions": [],
             "timeShift": null,
-            "title": "bad pkt counts",
+            "title": "Bad Packet Rates (packets/sec)",
             "tooltip": {
                 "shared": true,
                 "sort": 0,
@@ -511,7 +617,7 @@
     ],
     "schemaVersion": 25,
     "style": "dark",
-    "tags": [],
+    "tags": ["tplink", "switch", "networking"],
     "templating": {
         "list": [{
             "allValue": null,
@@ -546,11 +652,14 @@
     },
     "timepicker": {
         "refresh_intervals": [
-            "10s"
+            "10s",
+            "30s",
+            "1m",
+            "5m"
         ]
     },
     "timezone": "",
-    "title": "TPLink EasySmartSwitch Stats",
-    "uid": "6QJRBYmMz",
-    "version": 4
+    "title": "TPLink EasySmartSwitch Stats - PLUS",
+    "uid": "6QJRBYmMz-plus",
+    "version": 5
 }
