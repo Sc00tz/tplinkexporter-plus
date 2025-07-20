@@ -29,12 +29,10 @@ func main() {
 	// Create all collectors
 	trafficCollector := collectors.NewTrafficCollector("tplinkexporter", tplinkSwitch)
 	systemInfoCollector := collectors.NewSystemInfoCollector("tplinkexporter", tplinkSwitch)
-	portConfigCollector := collectors.NewPortConfigCollector("tplinkexporter", tplinkSwitch)
 
 	// Register all collectors with Prometheus
 	prometheus.MustRegister(trafficCollector)
 	prometheus.MustRegister(systemInfoCollector)
-	prometheus.MustRegister(portConfigCollector)
 
 	// Set up HTTP handler for metrics endpoint
 	http.Handle("/metrics", promhttp.Handler())
