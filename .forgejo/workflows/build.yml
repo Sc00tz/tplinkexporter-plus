@@ -1,51 +1,18 @@
-name: Build and Test
+name: Build Container
 
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+    tags: [ 'v*' ]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.19'
-
-    - name: Download dependencies
-      run: go mod download
-
-    - name: Run go vet
-      run: go vet ./...
-
-    - name: Run go fmt check
+    - name: Build container image
       run: |
-        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
-          echo "The following files are not formatted:"
-          gofmt -s -l .
-          exit 1
-        fi
-
-    - name: Build application
-      run: go build -o tplinkexporter-plus .
-
-    - name: Test application help
-      run: ./tplinkexporter-plus --help
-
-  docker-build:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Build Docker image
-      run: docker build -t tplinkexporter-plus:test .
-
-    - name: Test Docker image
-      run: docker run --rm tplinkexporter-plus:test --help
+        docker build -t ${{ gitea.repository }}:${{ gitea.sha }} .
+        docker build -t ${{ gitea.repository }}:latest .
