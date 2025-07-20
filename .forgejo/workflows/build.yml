@@ -1,73 +1,12 @@
-name: Build and Push Docker Image
+name: Build and Test
 
 on:
   push:
     branches: [ main, master ]
-    tags: [ 'v*' ]
   pull_request:
     branches: [ main, master ]
 
-env:
-  REGISTRY: docker.io
-  IMAGE_NAME: thelastguardian/tplinkexporter-plus
-
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Log in to Docker Hub
-      if: github.event_name != 'pull_request'
-      run: |
-        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login ${{ env.REGISTRY }} -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-    - name: Generate Docker tags
-      id: meta
-      run: |
-        IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
-        TAGS=""
-        
-        if [[ $GITHUB_REF == refs/tags/* ]]; then
-          VERSION=${GITHUB_REF#refs/tags/}
-          TAGS="$IMAGE:$VERSION,$IMAGE:latest"
-        elif [[ $GITHUB_REF == refs/heads/main ]] || [[ $GITHUB_REF == refs/heads/master ]]; then
-          TAGS="$IMAGE:latest"
-        else
-          BRANCH=${GITHUB_REF#refs/heads/}
-          TAGS="$IMAGE:$BRANCH"
-        fi
-        
-        echo "tags=$TAGS" >> $GITHUB_OUTPUT
-        echo "Generated tags: $TAGS"
-
-    - name: Build Docker image
-      run: |
-        IFS=',' read -ra TAG_ARRAY <<< "${{ steps.meta.outputs.tags }}"
-        
-        # Build the image
-        docker build -t "${TAG_ARRAY[0]}" .
-        
-        # Tag additional versions if needed
-        for tag in "${TAG_ARRAY[@]:1}"; do
-          docker tag "${TAG_ARRAY[0]}" "$tag"
-        done
-
-    - name: Push Docker image
-      if: github.event_name != 'pull_request'
-      run: |
-        IFS=',' read -ra TAG_ARRAY <<< "${{ steps.meta.outputs.tags }}"
-        
-        for tag in "${TAG_ARRAY[@]}"; do
-          echo "Pushing $tag"
-          docker push "$tag"
-        done
-
   test:
     runs-on: ubuntu-latest
     steps:
@@ -93,5 +32,20 @@ jobs:
           exit 1
         fi
 
-    - name: Build test
+    - name: Build application
       run: go build -o tplinkexporter-plus .
+
+    - name: Test application help
+      run: ./tplinkexporter-plus --help
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: docker build -t tplinkexporter-plus:test .
+
+    - name: Test Docker image
+      run: docker run --rm tplinkexporter-plus:test --help
